@@ -1,1 +1,2 @@
-# transposition
+# Transposition - Simple Models
+Transposition problem is about to recognize the order of two given paragraphs. In this repository we are going to implement simple models such as fully-connected classifier or ...

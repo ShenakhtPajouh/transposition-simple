@@ -5,7 +5,7 @@ import numpy as np
 
 class Classifier(Model):
 
-    def __init__(self, name, output_size=1, hidden_dim=64, dropout=0.2):
+    def __init__(self, name, output_size=2, hidden_dim=64, dropout=0.2):
         """
         This classifier determines if paragraphs are forward or backward
         Args:
@@ -21,7 +21,7 @@ class Classifier(Model):
         self.hidden_dim = hidden_dim
         self.dropout = layers.Dropout(dropout, name=name + '/Dropout')
         self.layer1 = layers.Dense(self.hidden_dim, activation='relu', name=name + '/Dense1')
-        self.layer2 = layers.Dense(self.output_size, activation='tanh', name=name + '/Dense2')
+        self.layer2 = layers.Dense(self.output_size, activation='softmax', name=name + '/Dense2')
 
     @property
     def variables(self):

@@ -1,6 +1,6 @@
 import tensorflow as tf
-from Simpler_Models.sent_encoder import sent_encoder
-from Simpler_Models.determiner import Determiner
+from sent_encoder import sent_encoder
+from determiner import Determiner
 
 
 class main_model(tf.keras.Model):
@@ -27,7 +27,7 @@ class main_model(tf.keras.Model):
 
     @property
     def variables(self):
-        return self._encoder.variables+self._classifier.variables
+        return self._encoder.variables+self._determiner.variables
 
 
     def call(self,inputs , indices, targets):

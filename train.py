@@ -6,7 +6,9 @@ import utils
 def train(embedding_table , batch_size , epochs, learning_rate ,  hidden_len , encoder_dropout, classifier_dropout , data , save_path):
     model = Simpler_Models.main_model('lstm-fc' ,embedding_table , hidden_len , encoder_dropout, classifier_dropout )
 
-    model.compile(optimizer='adam',
+    adam = tf.keras.optimizers.Adam(lr=learning_rate)
+
+    model.compile(optimizer=adam,
                   loss='categorical_cross_entropy')
 
     cp_callback = tf.keras.callbacks.ModelCheckpoint(save_path,

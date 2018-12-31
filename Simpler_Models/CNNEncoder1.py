@@ -1,8 +1,9 @@
 import tensorflow as tf
+from tensorflow.keras import Model, layers
 import numpy as np
 
 
-class CNNEncoder1(tf.keras.Model):
+class CNNEncoder1(Model):
 
     def __init__(self, name, num_layer=1, kernel_size=4, filters=1, padding='SAME',
                  pool_size=3, dropout=0.2):
@@ -23,10 +24,11 @@ class CNNEncoder1(tf.keras.Model):
         self.num_layer = num_layer
         self.kernel_size = kernel_size
         self.filters = filters
-        self.dropout = tf.keras.layers.Dropout(dropout)
-        self.conv = tf.keras.layers.Conv1D(kernel_size=kernel_size, filters=filters, padding=padding,
+        self.dropout = layers.Dropout(dropout)
+        self.conv = layers.Conv1D(kernel_size=kernel_size, filters=filters, padding=padding,
                                   name=name + '/Conv1D')
-        self.pool = tf.keras.layers.MaxPool1D(pool_size=pool_size, name=name + '/MaxPool1D')
+        self.pool = layers.MaxPool1D(pool_size=pool_size, name=name + '/MaxPool1D')
+        self.global_pool = layers.GlobalAveragePooling1D(name=name + '/GlobalAvePool1D')
 
     @property
     def variables(self):
@@ -45,4 +47,4 @@ class CNNEncoder1(tf.keras.Model):
             if is_training:
                 y = self.dropout(y)
 
-        return y
+        return self.global_pool(y)

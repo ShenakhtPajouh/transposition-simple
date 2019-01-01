@@ -9,7 +9,7 @@ class main_model(tf.keras.Model):
             through 2 Dense layers
     """
 
-    def __init__(self, name  , embedding_table , hidden_len , encoder_dropout, classifier_dropout):
+    def __init__(self, name  , embedding_table , hidden_len , encoder_dropout=0.5, classifier_dropout=0.2):
         """
         :param name: name of the model
         :param optimizer: optimizer!
@@ -29,11 +29,11 @@ class main_model(tf.keras.Model):
         return self._encoder.variables+self._determiner.variables
 
 
-    def call(self, inputs , targets):
+    def call(self, inputs):
         assert isinstance(inputs , list)
 
-        x = encoder(inputs[0])
-        y = encoder (inputs[1])
+        x = self._encoder(inputs[0])
+        y = self._encoder (inputs[1])
         output = self._determiner(tf.concat((x,y),axis=-1))
         return output
 

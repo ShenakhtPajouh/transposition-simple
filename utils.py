@@ -68,8 +68,8 @@ def get_paragraphs_as_words(stoi , paragraph_id=None, books=None, tags=None,
     for seq in second_seq:
         max_len = max (max_len , len(seq))
 
-    first = np.zeros((2*len(paragraphs),max_len),dtype=np.float64)
-    second = np.zeros((2*len(paragraphs), max_len), dtype=np.float64)
+    first = np.zeros((2*len(paragraphs),max_len),dtype=np.int32)
+    second = np.zeros((2*len(paragraphs), max_len), dtype=np.int32)
 
     labels = np.zeros((2*len(paragraphs),2) , dtype=np.float64)
     labels[:len(paragraphs),0]=1

@@ -5,7 +5,7 @@ import numpy as np
 
 class CNNEncoder2(Model):
 
-    def __init__(self, name, embedding_table, hidden_len, num_layer=1, kernel_size=4, filters=1, padding='SAME',
+    def __init__(self, name, embedding_table, hidden_len, num_layer=1, kernel_size=3, filters=1, padding='SAME',
                  pool_size=3, dropout=0.2):
         """
         Encoder of paragraph.

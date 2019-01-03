@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Extract pre-computed feature vectors from BERT."""
+"""Extract pre-computed feature vectors from brt."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,8 +23,8 @@ import collections
 import json
 import re
 
-from BERT import modeling
-from BERT import tokenization
+import modeling
+import tokenization
 import tensorflow as tf
 
 flags = tf.flags
@@ -39,7 +39,7 @@ flags.DEFINE_string("layers", "-1,-2,-3,-4", "")
 
 flags.DEFINE_string(
     "bert_config_file", None,
-    "The config json file corresponding to the pre-trained BERT model. "
+    "The config json file corresponding to the pre-trained brt model. "
     "This specifies the model architecture.")
 
 flags.DEFINE_integer(
@@ -50,10 +50,10 @@ flags.DEFINE_integer(
 
 flags.DEFINE_string(
     "init_checkpoint", None,
-    "Initial checkpoint (usually from a pre-trained BERT model).")
+    "Initial checkpoint (usually from a pre-trained brt model).")
 
 flags.DEFINE_string("vocab_file", None,
-                    "The vocabulary file that the BERT model was trained on.")
+                    "The vocabulary file that the brt model was trained on.")
 
 flags.DEFINE_bool(
     "do_lower_case", True,
@@ -228,7 +228,7 @@ def convert_examples_to_features(examples, seq_length, tokenizer):
       if len(tokens_a) > seq_length - 2:
         tokens_a = tokens_a[0:(seq_length - 2)]
 
-    # The convention in BERT is:
+    # The convention in brt is:
     # (a) For sequence pairs:
     #  tokens:   [CLS] is this jack ##son ##ville ? [SEP] no it is not . [SEP]
     #  type_ids: 0     0  0    0    0     0       0 0     1  1  1  1   1 1

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""The main BERT model and related functions."""
+"""The main brt model and related functions."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -103,7 +103,7 @@ class BertConfig(object):
 
 
 class BertModel(object):
-  """BERT model ("Bidirectional Embedding Representations from a Transformer").
+  """brt model ("Bidirectional Embedding Representations from a Transformer").
   Example usage:
   ```python
   # Already been converted into WordPiece token ids
@@ -141,7 +141,7 @@ class BertModel(object):
         embeddings or tf.embedding_lookup() for the word embeddings. On the TPU,
         it is must faster if this is True, on the CPU or GPU, it is faster if
         this is False.
-      scope: (optional) variable scope. Defaults to "bert".
+      scope: (optional) variable scope. Defaults to "brt".
     Raises:
       ValueError: The config is invalid or one of the input tensor shapes
         is invalid.
@@ -161,7 +161,7 @@ class BertModel(object):
     if token_type_ids is None:
       token_type_ids = tf.zeros(shape=[batch_size, seq_length], dtype=tf.int32)
 
-    with tf.variable_scope(scope, default_name="bert"):
+    with tf.variable_scope(scope, default_name="brt"):
       with tf.variable_scope("embeddings"):
         # Perform embedding lookup on the word ids.
         (self.embedding_output, self.embedding_table) = embedding_lookup(

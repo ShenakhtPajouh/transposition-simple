@@ -1,6 +1,6 @@
 import tensorflow as tf
-from BERT.BERT_BoW_encoder import encoder
-from  Simpler_Models.determiner import Determiner
+from brt.BERT_BoW_encoder import encoder
+from Simpler_Models.determiner import Determiner
 
 class main_model(tf.keras.Model):
     """

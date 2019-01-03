@@ -1,6 +1,6 @@
 import tensorflow as tf
-from Simpler_Models.sent_encoder import sent_encoder
-from Simpler_Models.determiner import Determiner
+from sent_encoder import sent_encoder
+from determiner import Determiner
 
 
 class main_model(tf.keras.Model):
@@ -27,16 +27,27 @@ class main_model(tf.keras.Model):
 
     @property
     def variables(self):
-        return self._encoder.variables+self._classifier.variables
+        return self._encoder.variables+self._determiner.variables
 
 
     def call(self,inputs , indices, targets):
         assert isinstance(inputs , list)
 
         with tf.GradientTape() as tape:
-            x = tf.gather_nd(sent_encoder(inputs[0]),indices[0])
-            y = tf.gather_nd(sent_encoder(inputs[1]),indices[1])
+            first = indices[0]
+            sec = indices[1]
+
+            range = tf.expand_dims(tf.tile(tf.expand_dims(tf.range(0, first.shape[0]), axis=1)
+                                           , tf.constant([1, first.shape[1]])), axis=1)
+
+            first_indices = tf.concat((range, first), axis=-1)
+            sec_indices = tf.concat((range, sec), axis=-1)
+
+            x = tf.gather_nd(sent_encoder(inputs[0]),first_indices)
+            y = tf.gather_nd(sent_encoder(inputs[1]),sec_indices)
+
             output = self._determiner(x , y)
+
             loss = tf.reduce_mean (tf.nn.softmax_cross_entropy_with_logits(labels=targets, logits=output))
             gradients = tape.gradient(loss, self.variables)
             self._optimizer.apply_gradients(zip(gradients, self.variables))

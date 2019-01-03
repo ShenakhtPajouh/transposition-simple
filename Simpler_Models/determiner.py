@@ -1,9 +1,8 @@
 import tensorflow as tf
-from tensorflow.keras import Model, layers
 import numpy as np
 
 
-class Classifier(Model):
+class Determiner(tf.keras.Model):
 
     def __init__(self, name, output_size=2, hidden_dim=64, dropout=0.2):
         """
@@ -15,13 +14,13 @@ class Classifier(Model):
             dropout: dropout value
         """
 
-        super(Classifier, self).__init__()
+        super(Determiner, self).__init__()
         self._name = name
         self.output_size = output_size
         self.hidden_dim = hidden_dim
-        self.dropout = layers.Dropout(dropout, name=name + '/Dropout')
-        self.layer1 = layers.Dense(self.hidden_dim, activation='relu', name=name + '/Dense1')
-        self.layer2 = layers.Dense(self.output_size, activation='softmax', name=name + '/Dense2')
+        self.dropout = tf.keras.layers.Dropout(dropout, name=name + '/Dropout')
+        self.layer1 = tf.keras.layers.Dense(self.hidden_dim, activation='relu', name=name + '/Dense1')
+        self.layer2 = tf.keras.layers.Dense(self.output_size, activation='relu', name=name + '/Dense2')
 
     @property
     def variables(self):

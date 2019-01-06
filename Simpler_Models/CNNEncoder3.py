@@ -11,13 +11,13 @@ from CNNEncoder2 import CNNEncoder2
 class CNNEncoder3(Model):
 
     def __init__(self, name, batch_size, paragraph_len, sentence_len, dim, embedding_table,
-                 hidden_len, sent_num_layer=1, par_num_layer=1, kernel_size=4, filters=1,
+                 hidden_len, sent_num_layer=1, par_num_layer=1, kernel_size=3, filters=1,
                  padding='SAME', pool_size=3, dropout=0.2):
         """
         Encoder of paragraph.
         Args:
             name: the name of the classifier
-            embeding_table: the table of embeddingd
+            embeding_table: the table of embeddings
             hidden_len: the dimensions of hidden layers
             num_layer: the number of layers in CNN
             kernel_size: the length of the 1D convolution window

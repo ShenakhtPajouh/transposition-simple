@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-from API import get_paragraphs
+from remote.API import get_paragraphs
 import numpy as np
 
 
@@ -47,7 +47,7 @@ def get_from_file (path):
     return ret
 
 def get_paragraphs_as_words(stoi , paragraph_id=None, books=None, tags=None,
-                 num_sequential=2, Paragraph_Object=True):
+                 num_sequential=2, Paragraph_Object=False):
     """
     :return: a triple of np arrays: first: embedding of words of first paragraphs per row
                                     second: embedding of words of second paragraphs per row
@@ -59,8 +59,17 @@ def get_paragraphs_as_words(stoi , paragraph_id=None, books=None, tags=None,
 
     max_len=-1
 
-    first_seq = [x.words() for x,y in paragraphs]
-    second_seq = [y.words() for x,y in paragraphs]
+    first_seq = []
+    second_seq = []
+
+    for x,y in paragraphs:
+        for sent in x:
+            for word in sent:
+                first_seq.append(word)
+        for sent in y:
+            for word in sent:
+                second_seq.append(word)
+
 
     for seq in first_seq:
         max_len = max(max_len , len(seq))

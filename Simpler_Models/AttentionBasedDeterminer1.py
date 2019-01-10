@@ -23,7 +23,8 @@ class AttentionBasedClassifier1(Model):
         self.dim = dim
         self.par_len = par_len
         self.dropout = layers.Dropout(dropout, name=name + '/Dropout')
-        self.dense = layers.Dense(1, name=name + '/Dense')
+        self.dense1 = layers.Dense(64, activation = 'relu', name = name + '/Dense1')
+        self.dense2 = layers.Dense(1, name = name + '/Dense2')
         self.FC = Determiner(name=name + "/FC")
 
     @property
@@ -44,9 +45,12 @@ class AttentionBasedClassifier1(Model):
         dim = 2 * self.dim
         x = layers.concatenate([self.reshape(h, 2, self.par_len), self.reshape(q, 2, self.par_len)])
         x = tf.reshape(x, shape=(x.shape[0], self.par_len * self.par_len, dim))
-        a = self.dense(x)
+        a = self.dense1(x)
         if is_training:
             a = self.dropout(a)
+        a = self.dense2(x)
+        if is_training:
+            a = self.dropout(a) 
         a = tf.reshape(a, shape=(a.shape[0], self.par_len * self.par_len))
         a = softmax(a, axis=1)
         a = self.reshape(a, 2, dim)

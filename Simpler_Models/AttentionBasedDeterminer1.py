@@ -5,7 +5,7 @@ from tensorflow.keras.activations import softmax
 import numpy as np
 from determiner import Determiner
 
-class AttentionBasedClassifier1(Model):
+class AttentionBasedDeterminer1(Model):
 
     def __init__(self, name, par_len, dim, output_size=1, dropout=0.2):
         """
@@ -17,7 +17,7 @@ class AttentionBasedClassifier1(Model):
             dropout: dropout value
         """
 
-        super(AttentionBasedClassifier1, self).__init__()
+        super(AttentionBasedDeterminer1, self).__init__()
         self._name = name
         self.output_size = output_size
         self.dim = dim
@@ -48,7 +48,7 @@ class AttentionBasedClassifier1(Model):
         a = self.dense1(x)
         if is_training:
             a = self.dropout(a)
-        a = self.dense2(x)
+        a = self.dense2(a)
         if is_training:
             a = self.dropout(a) 
         a = tf.reshape(a, shape=(a.shape[0], self.par_len * self.par_len))

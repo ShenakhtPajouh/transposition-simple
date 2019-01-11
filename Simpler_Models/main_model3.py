@@ -1,7 +1,7 @@
 import tensorflow as tf
 from sent_encoder import sent_encoder
 from determiner import Determiner
-
+from GatedCNNEncoder1 import CNNEncoder1
 
 class main_model(tf.keras.Model):
     """
@@ -9,7 +9,7 @@ class main_model(tf.keras.Model):
             of each paragraph through CNN and Dense layer afterwards
     """
 
-    def __init__(self, name , optimizer , embedding_table , hidden_len , encoder_dropout_rate , classifier_dropout_rate):
+    def __init__(self, name ,  embedding_table , hidden_len , filters=200,  encoder_dropout_rate=0.5 , cnn_dropout_rate=0.2 , classifier_dropout_rate = 0.2):
         """
         :param name: name of the model
         :param optimizer: optimizer!
@@ -20,37 +20,45 @@ class main_model(tf.keras.Model):
         """
         super(main_model, self).__init__()
         self._name = name
-        self._encoder = sent_encoder(self._name+'/LSTM_encoder', embedding_table, hidden_len, encoder_dropout_rate)
-        self._determiner = Determiner(name=self._name+'/FC_classifier' , dropout=classifier_dropout_rate)
-        self._optimizer = optimizer
+        self._rnn_encoder = sent_encoder(self._name+'/LSTM_encoder', embedding_table, hidden_len)
+        self._cnn_encoder = CNNEncoder1(self._name+'/GLU_CNN_encoder' , filters =filters)
+        self._determiner = Determiner(name=self._name+'/FC_classifier')
 
 
     @property
     def variables(self):
-        return self._encoder.variables+self._determiner.variables
+        return self._encoder.variables+self._determiner.variables+self._cnn_encoder.variables
 
 
-    def call(self,inputs , indices, targets):
+    def call(self,inputs):
         assert isinstance(inputs , list)
 
-        with tf.GradientTape() as tape:
-            first = indices[0]
-            sec = indices[1]
+        first = inputs[2]
+        sec = inputs[3]
 
-            range = tf.expand_dims(tf.tile(tf.expand_dims(tf.range(0, first.shape[0]), axis=1)
-                                           , tf.constant([1, first.shape[1]])), axis=1)
 
-            first_indices = tf.concat((range, first), axis=-1)
-            sec_indices = tf.concat((range, sec), axis=-1)
+        a = tf.range(tf.shape(first)[0])
+        b = tf.expand_dims(a, axis=1)
+        c = tf.tile(b, tf.constant([1, tf.shape(first)[1]]))
+        range = tf.expand_dims(c, axis=2)
 
-            x = tf.gather_nd(sent_encoder(inputs[0]),first_indices)
-            y = tf.gather_nd(sent_encoder(inputs[1]),sec_indices)
+        first = tf.expand_dims(first, axis=2)
+        sec = tf.expand_dims(sec, axis=2)
 
-            output = self._determiner(x , y)
 
-            loss = tf.reduce_mean (tf.nn.softmax_cross_entropy_with_logits(labels=targets, logits=output))
-            gradients = tape.gradient(loss, self.variables)
-            self._optimizer.apply_gradients(zip(gradients, self.variables))
-            return output
+        first_indices = tf.concat((range, tf.dtypes.cast(first,tf.int32)), axis=2)
+        sec_indices = tf.concat((range, tf.dtypes.cast(sec,tf.int32)), axis=2)
+
+        x = tf.gather_nd(sent_encoder(inputs[0]),first_indices)
+        x = self._cnn_encoder(x)
+
+        y = tf.gather_nd(sent_encoder(inputs[1]),sec_indices)
+        y = self._cnn_encoder(y)
+
+
+        output = self._determiner(x , y)
+
+
+        return output
 
 

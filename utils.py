@@ -1,5 +1,6 @@
 import numpy as np
 import pickle
+from random import shuffle
 from remote.API import get_paragraphs
 import numpy as np
 
@@ -47,7 +48,7 @@ def get_from_file(path):
     return ret
 
 
-def get_paragraphs_as_words(stoi, paragraph_id=None, books=None, tags=None,
+def get_paragraphs_as_words(stoi, max_len=512 , min_len=10 , min_sent=3, paragraph_id=None, books=None, tags=None,
                             num_sequential=2, Paragraph_Object=True):
     """
     :return: a triple of np arrays: first: embedding of words of first paragraphs per row
@@ -58,29 +59,22 @@ def get_paragraphs_as_words(stoi, paragraph_id=None, books=None, tags=None,
     paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
                                 tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
 
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
+
     first_seq = []
     second_seq = []
 
     max_len = -1
-    max_ind = 0
 
     for x, y in paragraphs:
         first_seq.append(x.text(format="words", lowercase=True))
         second_seq.append(y.text(format="words", lowercase=True))
 
-    for i, seq in enumerate(first_seq):
-        if max_len < len(seq):
-            max_len = len(seq)
-            max_ind = i
+    for seq in first_seq:
+        max_len = max (max_len , len(seq))
 
-    for i, seq in enumerate(second_seq):
-        if max_len < len(seq):
-            max_len = len(seq)
-            max_ind = i
-
-    print(" ".join(first_seq[max_ind]))
-    print(" ")
-    print(" ".join(second_seq[max_ind]))
+    for seq in second_seq:
+        max_len = max (max_len , len(seq))
 
     first = np.zeros((2 * len(paragraphs), max_len), dtype=np.int32)
     second = np.zeros((2 * len(paragraphs), max_len), dtype=np.int32)
@@ -88,14 +82,12 @@ def get_paragraphs_as_words(stoi, paragraph_id=None, books=None, tags=None,
     labels = np.zeros((2 * len(paragraphs), 2), dtype=np.float32)
     labels[:len(paragraphs), 0] = 1
     labels[len(paragraphs):, 1] = 1
-    count = 0
 
     for i, seq in enumerate(first_seq):
         for j, word in enumerate(seq):
             if word in stoi:
                 first[i, j] = stoi[word]
             else:
-                count += 1
                 first[i, j] = stoi['**BLANK**']
 
     for i, seq in enumerate(second_seq):
@@ -103,10 +95,8 @@ def get_paragraphs_as_words(stoi, paragraph_id=None, books=None, tags=None,
             if word in stoi:
                 second[i, j] = stoi[word]
             else:
-                count += 1
                 second[i, j] = stoi['**BLANK**']
 
-    print(max_len)
 
     first[len(paragraphs):, :] = second[:len(paragraphs), :]
     second[len(paragraphs):, :] = first[:len(paragraphs), :]
@@ -117,17 +107,10 @@ def get_paragraphs_as_words(stoi, paragraph_id=None, books=None, tags=None,
     second = second[permutation]
     labels = labels[permutation]
 
-    with open('first.pkl', 'wb') as pkl:
-        pickle.dump(first, pkl)
-    with open('second.pkl', 'wb') as pkl:
-        pickle.dump(second, pkl)
-    with open('labels.pkl', 'wb') as pkl:
-        pickle.dump(labels, pkl)
-
     return first, second, labels
 
 
-def make_dataset_with_indices(stoi, paragraph_id=None, books=None, tags=None,
+def make_dataset_with_indices(stoi, max_len=512 , min_len=10 , min_sent=3, paragraph_id=None, books=None, tags=None,
                               num_sequential=2, Paragraph_Object=True):
     """
         :return: a tuple of four np arrays: first: embedding of words of first paragraphs per row
@@ -138,6 +121,8 @@ def make_dataset_with_indices(stoi, paragraph_id=None, books=None, tags=None,
 
     paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
                                 tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
     first_sents = []
     second_sents = []
@@ -218,16 +203,155 @@ def make_dataset_with_indices(stoi, paragraph_id=None, books=None, tags=None,
     indices1 = indices1[permutation]
     indices2 = indices2 [permutation]
 
-    with open('first.pkl', 'wb') as pkl:
-        pickle.dump(first, pkl)
-    with open('second.pkl', 'wb') as pkl:
-        pickle.dump(second, pkl)
-    with open('labels.pkl', 'wb') as pkl:
-        pickle.dump(labels, pkl)
-    with open('indices.pkl', 'wb') as pkl:
-        pickle.dump((indices1, indices2), pkl)
 
     return first, second, labels, indices1, indices2
+
+
+def write_paragraphs_in_file(file_path , splits , max_len=512 , min_len=10 , min_sent=3 , paragraph_id=None, books=None, tags=None,
+                            num_sequential=2, Paragraph_Object=True ):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
+                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+    paragraphs = filter(paragraphs , max_len , min_len , min_sent)
+
+    prev=0
+    paragraphs_split=[]
+
+    for i in splits:
+        print (i)
+        paragraphs_split.append(paragraphs[prev:min(len(paragraphs),int(prev+len(paragraphs)*i))])
+        prev = int(prev+len(paragraphs)*i)
+
+    for i,split in enumerate(paragraphs_split):
+        with open(file_path+'-'+str(i)+'.txt', 'a') as outfile:
+             x = x.text(format="text")
+             y = y.text(format="text")
+             outfile.write(x+'\n')
+             outfile.write(y+'\n')
+
+
+
+
+def filter (paragraphs , max_len=512 , min_len=10 , min_sent=3):
+    ret = []
+    for tuple in paragraphs:
+        flag=False
+        for seq in tuple:
+            l = len(seq.text(format="words"))
+            ls = len(seq.text(format="sentences"))
+            if (l>max_len or l<min_len or ls<min_sent):
+                flag = True
+
+        if (flag==False):
+            ret.append(tuple)
+
+    return ret
+
+
+
+
+def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
+                            num_sequential=2, Paragraph_Object=True):
+
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
+                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+    paragraphs=filter(paragraphs , max_len , min_len , min_sent)
+
+    print (len(paragraphs))
+
+    first_seq = []
+    second_seq = []
+
+    max_p_len = -1
+    max_sent_len = -1
+
+    for x, y in paragraphs:
+        first_seq.append(x.text(format="sentences", lowercase=True))
+        second_seq.append(y.text(format="sentences", lowercase=True))
+
+    for paragraph in first_seq:
+        max_p_len = max(max_p_len , len(paragraph))
+        for sent in paragraph:
+            max_sent_len = max(max_sent_len , len(sent))
+
+    for paragraph in second_seq:
+        max_p_len = max(max_p_len , len(paragraph))
+        for sent in paragraph:
+            max_sent_len = max(max_sent_len , len(sent))
+
+    first = np.zeros((2 * len(paragraphs), max_p_len,max_sent_len), dtype=np.int32)
+    second = np.zeros((2 * len(paragraphs), max_p_len,max_sent_len), dtype=np.int32)
+
+    labels = np.zeros((2 * len(paragraphs), 2), dtype=np.float32)
+    labels[:len(paragraphs), 0] = 1
+    labels[len(paragraphs):, 1] = 1
+
+    for i, p in enumerate(first_seq):
+        for j, sent in enumerate(p):
+            for k,word in enumerate(sent):
+                if word in stoi:
+                    first[i, j, k] = stoi[word]
+                else:
+                    first[i, j, k] = stoi['**BLANK**']
+
+    for i, p in enumerate(second_seq):
+        for j, sent in enumerate(p):
+            for k,word in enumerate(sent):
+                if word in stoi:
+                    second[i, j, k] = stoi[word]
+                else:
+                    second[i, j, k] = stoi['**BLANK**']
+
+    first[len(paragraphs):, :] = second[:len(paragraphs), :]
+    second[len(paragraphs):, :] = first[:len(paragraphs), :]
+
+    permutation = np.random.permutation(2 * len(paragraphs))
+
+    first = first[permutation]
+    second = second[permutation]
+    labels = labels[permutation]
+
+    return first, second, labels
+
+
+def get_paragraphs_list(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
+                            num_sequential=2, Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
+                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
+
+    ret=[]
+
+    for tuple in paragraphs:
+        tuple_indexed=[]
+        for p in tuple:
+            p_indexed=[]
+            sents = p.text(format="sentences")
+            for sent in sents:
+                sent_indexed=[]
+                for word in sent:
+                    if word in stoi:
+                        sent_indexed.append(stoi[word])
+                    else:
+                        sent_indexed.append(stoi['**BLANK**'])
+
+                p_indexed.append(sent_indexed)
+            tuple_indexed.append(p_indexed)
+        ret.append(tuple_indexed)
+
+    shuffle(ret)
+
+    print(ret[0])
+
+
+    return ret
+
+
+
+
+
 
 
 

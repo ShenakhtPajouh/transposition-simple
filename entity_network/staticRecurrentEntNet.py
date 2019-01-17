@@ -1,7 +1,4 @@
 import tensorflow as tf
-import numpy as np
-import prgrph_ending_classifier
-import train
 
 K = tf.keras.backend
 

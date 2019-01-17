@@ -18,6 +18,9 @@ class entity_main_model (keras.Model):
         self.determiner = Determiner(self._name+"/determiner", output_size=2, hidden_dim=64,
                                      dropout=determiner_dropout_rate)
 
+    @property
+    def variables(self):
+        return self._determiner.variables+self._entnet.variables
 
     def call(self , inputs):
         """

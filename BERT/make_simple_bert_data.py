@@ -1,11 +1,9 @@
 import tensorflow as tf
-from tensorflow import keras
 import numpy as np
 import json
-import pickle
 import utils
-from BERT import tokenization
-from BERT import modeling
+import tokenization
+import modeling
 import time
 
 

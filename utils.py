@@ -314,6 +314,26 @@ def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragra
 
     return first, second, labels
 
+def get_sents_as_text_list(max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
+                            num_sequential=2, Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
+                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
+
+    ret = []
+
+    for x, y in paragraphs:
+        xs = x.text("sentences")
+        ys = y.text ("sentences")
+        xst = [" ".join(sent) for sent in xs]
+        yst = [" ".join(sent) for sent in ys]
+        ret.append((xst, yst))
+
+    shuffle(ret)
+
+    return ret
+
 
 def get_paragraphs_list(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
                             num_sequential=2, Paragraph_Object=True):
@@ -361,7 +381,8 @@ def get_paragraphs_as_text(max_len=512 , min_len=10 , min_sent=3 , paragraph_id=
         ret.append((x.text("text") , y.text("text")))
 
 
-
+    shuffle(ret)
+    return ret
 
 
 

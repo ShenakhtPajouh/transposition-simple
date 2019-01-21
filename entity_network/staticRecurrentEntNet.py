@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.contrib import autograph
 
 K = tf.keras.backend
 
@@ -99,8 +100,8 @@ class Update_entity(tf.keras.Model):
         curr_prgrphs_num = current_hiddens.shape[0]
         h_tilda = self.activation(
             tf.reshape(tf.matmul(tf.reshape(current_hiddens, [-1, self.entity_embedding_dim]), self.U) +
-                       tf.matmul(tf.reshape(current_hiddens, [-1, self.entity_embedding_dim]), self.V) +
-                       tf.matmul(tf.reshape(tf.tile(tf.expand_dims(encoded_sents, 0), [1, self.entity_num, 1]),
+                       tf.matmul(tf.reshape(current_keys, [-1, self.entity_embedding_dim]), self.V) +
+                       tf.matmul(tf.reshape(tf.tile(tf.expand_dims(encoded_sents, 1), [1, self.entity_num, 1]),
                                             shape=[-1, self.entity_embedding_dim]), self.W),
                        shape=[curr_prgrphs_num, self.entity_num, self.entity_embedding_dim]))
         'h_tilda shape: [current_prgrphs_num, entity_num, entity_embedding_dim]'
@@ -243,7 +244,7 @@ class StaticRecurrentEntNet(tf.keras.Model):
     #     embedding_dim=self.embedding_matrix.shape[1]
     #     self.embedding_matrix=tf.concat([self.embedding_matrix,tf.zeros([1,embedding_dim])],axis=0)
 
-
+    @autograph.convert()
     def encode_prgrph(self, inputs):
         '''
             TASK 1
@@ -276,15 +277,15 @@ class StaticRecurrentEntNet(tf.keras.Model):
 
         for i in range(max_sent_num):
             ''' to see which sentences are available '''
-            indices = tf.where(prgrph_mask[:, i, 0])
+            indices = tf.where(prgrph_mask[:, i])
             print('indices shape encode:',indices.shape)
             indices = tf.cast(tf.squeeze(indices, axis=1),tf.int32)
             print('indices_p1_mask', indices)
             # print('first_prgrph_embedding shape:',first_prgrph_embeddings.shape)
             # print('first_prgrph_embeddings[:,i,:,:] shape:',first_prgrph_embeddings[:,i,:,:].shape)
-            current_sents = tf.gather(prgrph_embeddings[:, i, :, :], indices)
-            print('current_sents_call shape:', current_sents.shape)
-            encoded_sents = self.sent_encoder_module([current_sents])
+            encoded_sents = tf.gather(prgrph_embeddings[:, i, :], indices)
+            # print('current_sents_call shape:', current_sents.shape)
+            # encoded_sents = self.sent_encoder_module([current_sents])
             self.update_entity_module([encoded_sents, indices])
 
         return self.update_entity_module.hiddens
@@ -305,3 +306,4 @@ class StaticRecurrentEntNet(tf.keras.Model):
         # what is inputs?
         mode = inputs[0]
         return self.encode_prgrph(inputs[1:])
+

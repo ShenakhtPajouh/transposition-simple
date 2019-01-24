@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import json
+import utils
 from BERT import tokenization
 from BERT import modeling
 import time
@@ -48,10 +49,7 @@ class BERT_encoder:
 
         tokenized_ids = []
         for x , y in batch:
-            xtokens = self._tokenizer.tokenize(x)
-            ytokens = self._tokenizer.tokenize(y)
-            tokens = ['[CLS]']+xtokens+['[SEP]']+ytokens
-            ids = self._tokenizer.convert_tokens_to_ids(tokens)
+            ids = [101]+x+[102]+y
 
             tokenized_ids.append(ids)
 
@@ -69,7 +67,7 @@ class BERT_encoder:
 
         embds = self._sess.run(self._embeddings, {self._inputs: ins, self._mask: mask})
 
-        final_embd = embds[-1][0]+ embds[-2][0] + embds[-3][0] + embds[-4][0]
+        final_embd = embds[-1][:,0,:]+ embds[-2][:,0,:] + embds[-3][:,0,:] + embds[-4][:,0,:]
 
 
 
@@ -112,6 +110,7 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
         batch.append((y[max(0, len(y) - max_len // 2):], x[0:min(len(x), max_len // 2)]))
         count += 1
         if (count % batch_size == 0):
+            print(count)
             embds = encoder.encode(batch)
             data[count - batch_size:count] = embds
             labels[count - batch_size:count, 1] = 1

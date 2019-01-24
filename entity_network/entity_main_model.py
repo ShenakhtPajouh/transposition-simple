@@ -35,7 +35,7 @@ class entity_main_model (keras.Model):
                                    first sequence
                        inputs[3] = a tensor of shape [batch_size , max_sent_num , max token_num] containing the mask of
                                    first sequence
-                       inputs[4] = a tensor of shape [entity_num , entitiy_embedding_dim] containing embedding keys
+                       inputs[4] = a tensor of shape [batch_size ,entity_num , entitiy_embedding_dim] containing embedding keys
 
         :return: a tensor of shape [batch_size , 2] containing result of classification
         """
@@ -44,4 +44,6 @@ class entity_main_model (keras.Model):
         y = self._entnet ([inputs[4],inputs[1],inputs[3]])
 
         ret = self._determiner(tf.concat((x,y),axis=-1))
+
+        return ret
 

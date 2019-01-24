@@ -95,12 +95,13 @@ TINY_PARAMS.update(
     filter_size=256,
 )
 
-MY_PARAMS = BASE_PARAMS.compy()
+MY_PARAMS = BASE_PARAMS.copy()
 MY_PARAMS.update(
     default_batch_size=64,
     max_length = 50,
     num_heads = 4,
     hidden_size = 64,
     num_hidden_layers = 1,
-    filter_size=128
+    filter_size=128,
+    embedding_size=768,
 )

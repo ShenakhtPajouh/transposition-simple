@@ -5,6 +5,7 @@ import tokenization
 import modeling
 import time
 
+encoder = None
 
 class BERT_encoder:
     """
@@ -67,7 +68,7 @@ class BERT_encoder:
 
         embds = self._sess.run(self._embeddings, {self._inputs: ins, self._mask: mask})
 
-        final_embd = embds[-1] + embds[-2] + embds[-3] + embds[-4]
+        final_embd = embds[-1]
 
         return np.mean(final_embd, axis=1)
 
@@ -79,116 +80,55 @@ def make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base
 
     offset = (len(paragraphs) - len(paragraphs) % batch_size)
 
-    first = np.zeros((2 * offset, max_sent, 768), dtype=np.float64)
-    second = np.zeros((2 * offset, max_sent, 768), dtype=np.float64)
-    labels = np.zeros((2 * offset, 2), dtype=np.float64)
-    first_sent_num = np.zeros((2 * offset), dtype=np.int32)
-    second_sent_num = np.zeros((2 * offset), dtype=np.int32)
+    first = np.zeros((2 * len(paragraphs), max_sent, 768), dtype=np.float64)
+    second = np.zeros((2 * len(paragraphs), max_sent, 768), dtype=np.float64)
+    labels = np.zeros((2 * len(paragraphs), 2), dtype=np.float64)
+    first_sent_num = np.zeros((2 * len(paragraphs)), dtype=np.int32)
+    second_sent_num = np.zeros((2 * len(paragraphs)), dtype=np.int32)
 
     encoder = BERT_encoder(bert_config_path, bert_vocab_path, bert_base_path)
 
     start = time.time()
 
-    for i in range(0, offset, batch_size):
-        paragraph_batch = paragraphs[i:i + batch_size]
+    for i in range(0, offset+1, batch_size):
+        print (i)
+        if (i<len(paragraphs)):
+            paragraph_batch = paragraphs[i:min(i + batch_size , len(paragraphs))]
 
-        sent_batch = []
-        for x, y in paragraph_batch:
-            sent_batch = sent_batch + x + y
+            sent_batch = []
+            for x, y in paragraph_batch:
+                sent_batch = sent_batch + x + y
 
-        embds = encoder.encode(sent_batch)
+            embds = encoder.encode(sent_batch)
 
-        count = 0
-        for j, (x, y) in enumerate(paragraphs[i:i + batch_size]):
-            first_sent_num[i + j] = len(x)
-            second_sent_num[i + j] = len(y)
-            first_sent_num[offset + i + j] = len(y)
-            second_sent_num[offset + i + j] = len(x)
+            count = 0
+            for j, (x, y) in enumerate(paragraphs[i:i + batch_size]):
+                first_sent_num[i + j] = len(x)
+                second_sent_num[i + j] = len(y)
+                first_sent_num[len(paragraphs) + i + j] = len(y)
+                second_sent_num[len(paragraphs) + i + j] = len(x)
 
-            for k in range(len(x)):
-                first[i + j, k] = embds[count]
-                second[offset + i + j, k] = embds[count]
-                count += 1
-            for k in range(len(y)):
-                second[i + j, k] = embds[count]
-                first[offset + i + j, k] = embds[count]
-                count += 1
-        end = time.time()
-        print(end - start)
-        start = time.time()
+                for k in range(len(x)):
+                    first[i + j, k] = embds[count]
+                    second[len(paragraphs) + i + j, k] = embds[count]
+                    count += 1
+                for k in range(len(y)):
+                    second[i + j, k] = embds[count]
+                    first[len(paragraphs) + i + j, k] = embds[count]
+                    count += 1
+            end = time.time()
+            print(end - start)
+            start = time.time()
 
-    labels[:offset, 0] = 1
-    labels[offset: 2 * offset, 1] = 1
-
-    permutation = np.random.permutation(first.shape[0])
-
-    first = first[permutation]
-    second = second[permutation]
-    first_sent_num = first_sent_num[permutation]
-    second_sent_num = second_sent_num[permutation]
-    labels = labels[permutation]
+        labels[:len(paragraphs), 0] = 1
+        labels[len(paragraphs):, 1] = 1
 
     return first, second, first_sent_num, second_sent_num, labels
 
 
-def make_reversed_pad_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
-    print("!!!!")
-    max_sent = -1
-    for x, y in paragraphs:
-        max_sent = max(max_sent, len(x), len(y))
-
-    offset = (len(paragraphs) - len(paragraphs) % batch_size)
-
-    first = np.zeros((2 * offset, max_sent, 768), dtype=np.float64)
-    second = np.zeros((2 * offset, max_sent, 768), dtype=np.float64)
-    labels = np.zeros((2 * offset, 2), dtype=np.float64)
-    first_sent_num = np.zeros((2 * offset), dtype=np.int32)
-    second_sent_num = np.zeros((2 * offset), dtype=np.int32)
-
-    encoder = BERT_encoder(bert_config_path, bert_vocab_path, bert_base_path)
-
-    start = time.time()
-
-    for i in range(0, offset, batch_size):
-        paragraph_batch = paragraphs[i:i + batch_size]
-        sent_batch = []
-        for x, y in paragraph_batch:
-            sent_batch = sent_batch + x + y
-        embds = encoder.encode(sent_batch)
-        count = 0
-        for j, (x, y) in enumerate(paragraphs[i:i + batch_size]):
-            first_sent_num[i + j] = len(x)
-            second_sent_num[i + j] = len(y)
-            first_sent_num[offset + i + j] = len(y)
-            second_sent_num[offset + i + j] = len(x)
-
-            for k in range(len(x)):
-                first[i + j, max_sent - len(x) + k] = embds[count]
-                second[offset + i + j, k] = embds[count]
-                count += 1
-            for k in range(len(y)):
-                second[i + j, k] = embds[count]
-                first[offset + i + j, max_sent - len(y) + k] = embds[count]
-                count += 1
-        end = time.time()
-        print(end - start)
-        start = time.time()
-
-    labels[:offset, 0] = 1
-    labels[offset: 2 * offset, 1] = 1
-
-    permutation = np.random.permutation(first.shape[0])
-
-    first = first[permutation]
-    second = second[permutation]
-    first_sent_num = first_sent_num[permutation]
-    second_sent_num = second_sent_num[permutation]
-    labels = labels[permutation]
-
-    return first, second, first_sent_num, second_sent_num, labels
 
 
-def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size, reversed=False):
+def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
     """
     ::param:: path: path two a file containing tuples of paragraphs as lists of lists of words
 
@@ -197,9 +137,5 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
         data: [,768] np array containing [cls] token encoding used for classification
         labels: [,2] np array that determines whether the first paragraph has occured first
         """
-    if reversed == False:
-        return make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size)
 
-    else:
-        return make_reversed_pad_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size)
-
+    return make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size)

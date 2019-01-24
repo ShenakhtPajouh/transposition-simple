@@ -24,12 +24,11 @@ from __future__ import print_function
 
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
-from official.transformer.model import attention_layer
-from official.transformer.model import beam_search
-from official.transformer.model import embedding_layer
-from official.transformer.model import ffn_layer
-from official.transformer.model import model_utils
-from official.transformer.utils.tokenizer import EOS_ID
+import attention_layer
+import beam_search
+import embedding_layer
+import ffn_layer
+import model_utils
 
 _NEG_INF = -1e9
 
@@ -114,7 +113,8 @@ class Transformer(object):
 
       #here I changed the model to make it receive embedded inputs, now inputs is a tuple containing
       # embedded sequences and mask
-      embedded_inputs = inputs[0]
+
+      embedded_inputs = tf.layers.dense(inputs[0] , self.params["hidden_size"])
       inputs_padding = inputs[1]
 
       with tf.name_scope("add_pos_encoding"):
@@ -122,6 +122,7 @@ class Transformer(object):
         pos_encoding = model_utils.get_position_encoding(
             length, self.params["hidden_size"])
         encoder_inputs = embedded_inputs + pos_encoding
+
 
       if self.train:
         encoder_inputs = tf.nn.dropout(
@@ -206,44 +207,44 @@ class Transformer(object):
       return logits, cache
     return symbols_to_logits_fn
 
-  def predict(self, encoder_outputs, encoder_decoder_attention_bias):
-    """Return predicted sequence."""
-    batch_size = tf.shape(encoder_outputs)[0]
-    input_length = tf.shape(encoder_outputs)[1]
-    max_decode_length = input_length + self.params["extra_decode_length"]
-
-    symbols_to_logits_fn = self._get_symbols_to_logits_fn(max_decode_length)
-
-    # Create initial set of IDs that will be passed into symbols_to_logits_fn.
-    initial_ids = tf.zeros([batch_size], dtype=tf.int32)
-
-    # Create cache storing decoder attention values for each layer.
-    cache = {
-        "layer_%d" % layer: {
-            "k": tf.zeros([batch_size, 0, self.params["hidden_size"]]),
-            "v": tf.zeros([batch_size, 0, self.params["hidden_size"]]),
-        } for layer in range(self.params["num_hidden_layers"])}
-
-    # Add encoder output and attention bias to the cache.
-    cache["encoder_outputs"] = encoder_outputs
-    cache["encoder_decoder_attention_bias"] = encoder_decoder_attention_bias
-
-    # Use beam search to find the top beam_size sequences and scores.
-    decoded_ids, scores = beam_search.sequence_beam_search(
-        symbols_to_logits_fn=symbols_to_logits_fn,
-        initial_ids=initial_ids,
-        initial_cache=cache,
-        vocab_size=self.params["vocab_size"],
-        beam_size=self.params["beam_size"],
-        alpha=self.params["alpha"],
-        max_decode_length=max_decode_length,
-        eos_id=EOS_ID)
+  # def predict(self, encoder_outputs, encoder_decoder_attention_bias):
+  #   """Return predicted sequence."""
+  #   batch_size = tf.shape(encoder_outputs)[0]
+  #   input_length = tf.shape(encoder_outputs)[1]
+  #   max_decode_length = input_length + self.params["extra_decode_length"]
+  #
+  #   symbols_to_logits_fn = self._get_symbols_to_logits_fn(max_decode_length)
+  #
+  #   # Create initial set of IDs that will be passed into symbols_to_logits_fn.
+  #   initial_ids = tf.zeros([batch_size], dtype=tf.int32)
+  #
+  #   # Create cache storing decoder attention values for each layer.
+  #   cache = {
+  #       "layer_%d" % layer: {
+  #           "k": tf.zeros([batch_size, 0, self.params["hidden_size"]]),
+  #           "v": tf.zeros([batch_size, 0, self.params["hidden_size"]]),
+  #       } for layer in range(self.params["num_hidden_layers"])}
+  #
+  #   # Add encoder output and attention bias to the cache.
+  #   cache["encoder_outputs"] = encoder_outputs
+  #   cache["encoder_decoder_attention_bias"] = encoder_decoder_attention_bias
+  #
+  #   # Use beam search to find the top beam_size sequences and scores.
+  #   decoded_ids, scores = beam_search.sequence_beam_search(
+  #       symbols_to_logits_fn=symbols_to_logits_fn,
+  #       initial_ids=initial_ids,
+  #       initial_cache=cache,
+  #       vocab_size=self.params["vocab_size"],
+  #       beam_size=self.params["beam_size"],
+  #       alpha=self.params["alpha"],
+  #       max_decode_length=max_decode_length,
+  #       eos_id=EOS_ID)
 
     # Get the top sequence for each batch element
-    top_decoded_ids = decoded_ids[:, 0, 1:]
-    top_scores = scores[:, 0]
-
-    return {"outputs": top_decoded_ids, "scores": top_scores}
+    # top_decoded_ids = decoded_ids[:, 0, 1:]
+    # top_scores = scores[:, 0]
+    #
+    # return {"outputs": top_decoded_ids, "scores": top_scores}
 
 
 class LayerNormalization(tf.layers.Layer):

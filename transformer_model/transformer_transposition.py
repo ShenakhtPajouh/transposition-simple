@@ -76,7 +76,7 @@ class transformer(object):
             with tf.variable_scope("feedforward"):
                 logits1 = tf.layers.dense(transformer_encoded , 32)
                 self.final_logits = tf.layers.dense(logits1 , 2)
-                self.loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.final_logits , labels= self.target)
+                self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.final_logits , labels= self.target))
 
 
     def variables(self):

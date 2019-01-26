@@ -39,7 +39,6 @@ def train(dataset , batch_size , max_sent_len , max_sent_num , embedding_len,
         lr_new_value = tf.placeholder(tf.float32, [])
         lr_update = tf.assign(lr, lr_new_value)
 
-        # clipping gradients by norm 5
         global_step = tf.Variable(0, trainable=False)
         params = model.variables()
         gradients = tf.gradients(model.loss , params)

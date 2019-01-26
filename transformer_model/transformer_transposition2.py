@@ -15,22 +15,19 @@ class transformer(object):
         self._batch_size = batch_size
         self._train = train
 
-        with tf.device('/gpu:0'):
-            self.first_num_sents = tf.placeholder(dtype=tf.int32 , shape=[batch_size] , name="first_num_sent")
-            self.second_num_sents = tf.placeholder(dtype=tf.int32, shape=[batch_size], name="second_num_sent")
-            self.indices = tf.placeholder(dtype=tf.int32 , shape=[None,None] , name="first_indices")
+        self.first_num_sents = tf.placeholder(dtype=tf.int32 , shape=[batch_size] , name="first_num_sent")
+        self.second_num_sents = tf.placeholder(dtype=tf.int32, shape=[batch_size], name="second_num_sent")
 
-            self.inputs = tf.placeholder(dtype=tf.int32 , shape=[None , None] ,name="inputs")
-            self.mask = tf.placeholder(dtype=tf.int32 , shape=[None , None] , name="mask")
+        self.inputs = tf.placeholder(dtype=tf.float32 , shape=[batch_size ,2*max_sent_num+1 , embedding_len] ,name="inputs")
 
-            self.target = tf.placeholder(dtype=tf.int32 , shape=[batch_size , 2] , name="targets")
+        self.target = tf.placeholder(dtype=tf.int32 , shape=[batch_size , 2] , name="targets")
 
 
-            with tf.variable_scope('separator'):
-                self._separator = tf.get_variable('separator' , shape=[1,self._embedding_len] , dtype=tf.float32)
+        with tf.variable_scope('separator'):
+            self._separator = tf.get_variable('separator' , shape=[1,self._embedding_len] , dtype=tf.float32)
 
 
-            self._transformer = Transformer(MY_PARAMS , train)
+        self._transformer = Transformer(MY_PARAMS , train)
 
         self.make_graph()
 
@@ -60,7 +57,7 @@ class transformer(object):
         with tf.variable_scope("feedforward"):
             logits1 = tf.layers.dense(transformer_encoded , 32)
             self.final_logits = tf.layers.dense(logits1 , 2)
-            self.loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.final_logits , labels= self.target)
+            self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.final_logits , labels= self.target))
 
 
     def variables(self):

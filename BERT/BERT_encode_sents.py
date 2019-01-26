@@ -33,7 +33,7 @@ class BERT_encoder:
                                          use_one_hot_embeddings=False, scope="bert")
 
         self._embeddings = self._model.get_all_encoder_layers()
-        print("\n".join([v.name for v in tf.global_variables()]))
+
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         self._sess = tf.Session(config=config)
@@ -73,8 +73,18 @@ class BERT_encoder:
         return np.mean(final_embd, axis=1)
 
 
-def make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
+def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
+    """
+        ::param:: paragraphs containing tuples of the first and the second paragraph each one as a list of sentences
+
+        ::return:: first: sentences of the first paragraph encoded with bert
+                   second: sentences of the second paragraph encoded with bert
+                   first_sent_num: number of sentences in the first paragraph
+                   second_sent_num: number of sentences in the second paragraph
+                   labels: labels!
+    """
     max_sent = -1
+
     for x, y in paragraphs:
         max_sent = max(max_sent, len(x), len(y))
 
@@ -124,18 +134,3 @@ def make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base
         labels[len(paragraphs):, 1] = 1
 
     return first, second, first_sent_num, second_sent_num, labels
-
-
-
-
-def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
-    """
-    ::param:: path: path two a file containing tuples of paragraphs as lists of lists of words
-
-    desc:
-        makes two np arrays: data and labels
-        data: [,768] np array containing [cls] token encoding used for classification
-        labels: [,2] np array that determines whether the first paragraph has occured first
-        """
-
-    return make_normal_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size)

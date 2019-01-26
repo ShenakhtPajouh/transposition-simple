@@ -1,5 +1,7 @@
+#model containing a single layer four headed transformer and a feedforward separator
+#inputs are bert features extracted formerly
+
 import tensorflow as tf
-import json
 from transformer_model.model_params import MY_PARAMS
 from transformer_model.transformer import Transformer
 
@@ -15,11 +17,16 @@ class transformer(object):
         self._batch_size = batch_size
         self._train = train
 
+        #number of sentences in the first and the second paragraph
         self.first_num_sents = tf.placeholder(dtype=tf.int32 , shape=[batch_size] , name="first_num_sent")
         self.second_num_sents = tf.placeholder(dtype=tf.int32, shape=[batch_size], name="second_num_sent")
 
+        #inputs in form of concatenation of sentence embeddings of the first and the seconf paragraph
+        #an empty cell between
+        #I know its not a nice structure for a model, but for ease of used and temporally it is designed this way
         self.inputs = tf.placeholder(dtype=tf.float32 , shape=[batch_size ,2*max_sent_num+1 , embedding_len] ,name="inputs")
 
+        #targets!
         self.target = tf.placeholder(dtype=tf.int32 , shape=[batch_size , 2] , name="targets")
 
 
@@ -42,15 +49,15 @@ class transformer(object):
         transformer_inputs = updates + self.inputs
         #making padding for transformer
         transformer_padding = tf.dtypes.cast(tf.bitwise.invert(tf.sequence_mask(self.first_num_sents+self.second_num_sents+1 ,maxlen = 2*self._max_sent_num+1 , dtype=tf.int32)),tf.float32)
-
+        #making attention bias for the transformer encoder
         attention_bias = tf.expand_dims(
         tf.expand_dims(transformer_padding*_NEG_INF, axis=1), axis=1)
 
         #getting transformer result
-
         with tf.variable_scope("transformer"):
             transformer_res = self._transformer.encode((transformer_inputs,transformer_padding) , attention_bias)
 
+        #BoW!
         transformer_encoded = tf.reduce_mean(transformer_res , axis=1)
 
         #passing transformer result through a feedforward
@@ -62,7 +69,7 @@ class transformer(object):
 
     def variables(self):
         """
-        :return: variables of the model, excluding the BERT model variables
+        :return: variables of the model
         """
         ret = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='transformer')
         ret = ret + tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='feedforward')

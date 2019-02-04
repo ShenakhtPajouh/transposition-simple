@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.contrib import autograph
-import standard.prgrph_ending_classifier as prgrph_ending_classifier
 
 K = tf.keras.backend
 
@@ -65,9 +64,11 @@ class EntityCell(tf.keras.Model):
             output: gates of shape : [curr_prgrphs_num, entity_num]
         """
 
-        print('enocded_sents dtype:', encoded_sents.dtype)
-        print('current_hiddens dtype:', current_hiddens.dtype)
-        print('enocded_sents shape:', encoded_sents.shape)
+#         print('enocded_sents dtype:', encoded_sents.dtype)
+#         print('current_hiddens dtype:', current_hiddens.dtype)
+#         print('enocded_sents shape:', encoded_sents.shape)
+#         print('encoded_sents dtype:', encoded_sents.dtype)
+#         print('hiddens', current_hiddens.dtype)
         return tf.sigmoid(tf.reduce_sum(tf.multiply(tf.expand_dims(encoded_sents, 1), current_hiddens) +
                                         tf.multiply(tf.expand_dims(encoded_sents, 1), current_keys), axis=2))
 
@@ -139,7 +140,7 @@ class EntityCell(tf.keras.Model):
     #                             use_shared_keys=use_shared_keys, **kwargs)
 
 
-# @autograph.convert()
+#@autograph.convert()
 def simple_entity_network(inputs, keys, entity_cell=None,
                           initial_entity_hidden_state=None,
                           use_shared_keys=False, return_last=True):
@@ -320,6 +321,5 @@ class RNNRecurrentEntityEncoder(tf.keras.Model):
              initial_entity_hidden_state=None, update_positions=None, use_shared_keys=False,
              return_last=True, self_attention=False, **kwargs):
         raise NotImplementedError
-
 
 

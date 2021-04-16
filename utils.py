@@ -5,7 +5,8 @@ from remote.API import get_paragraphs
 import numpy as np
 
 
-def extract_embedding_from_dict(dict_path, vocab_size, embedding_len, vectors_path, stoi_path, itos_path):
+def extract_embedding_from_dict(dict_path, vocab_size, embedding_len,
+                                vectors_path, stoi_path, itos_path):
     """
     :param dict_path: path of the dictionary of word to embedding
     :param vocab_size: size of embedding vocabulary
@@ -48,16 +49,26 @@ def get_from_file(path):
     return ret
 
 
-def get_paragraphs_as_words(stoi, max_len=512 , min_len=10 , min_sent=3, paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True):
+def get_paragraphs_as_words(stoi,
+                            max_len=512,
+                            min_len=10,
+                            min_sent=3,
+                            paragraph_id=None,
+                            books=None,
+                            tags=None,
+                            num_sequential=2,
+                            Paragraph_Object=True):
     """
     :return: a triple of np arrays: first: embedding of words of first paragraphs per row
                                     second: embedding of words of second paragraphs per row
                                     labels: whether the first paragraph has happend before the second paragraph
     """
 
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
     paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
@@ -71,10 +82,10 @@ def get_paragraphs_as_words(stoi, max_len=512 , min_len=10 , min_sent=3, paragra
         second_seq.append(y.text(format="words", lowercase=True))
 
     for seq in first_seq:
-        max_len = max (max_len , len(seq))
+        max_len = max(max_len, len(seq))
 
     for seq in second_seq:
-        max_len = max (max_len , len(seq))
+        max_len = max(max_len, len(seq))
 
     first = np.zeros((2 * len(paragraphs), max_len), dtype=np.int32)
     second = np.zeros((2 * len(paragraphs), max_len), dtype=np.int32)
@@ -97,7 +108,6 @@ def get_paragraphs_as_words(stoi, max_len=512 , min_len=10 , min_sent=3, paragra
             else:
                 second[i, j] = stoi['**BLANK**']
 
-
     first[len(paragraphs):, :] = second[:len(paragraphs), :]
     second[len(paragraphs):, :] = first[:len(paragraphs), :]
 
@@ -110,8 +120,15 @@ def get_paragraphs_as_words(stoi, max_len=512 , min_len=10 , min_sent=3, paragra
     return first, second, labels
 
 
-def make_dataset_with_indices(stoi, max_len=512 , min_len=10 , min_sent=3, paragraph_id=None, books=None, tags=None,
-                              num_sequential=2, Paragraph_Object=True):
+def make_dataset_with_indices(stoi,
+                              max_len=512,
+                              min_len=10,
+                              min_sent=3,
+                              paragraph_id=None,
+                              books=None,
+                              tags=None,
+                              num_sequential=2,
+                              Paragraph_Object=True):
     """
         :return: a tuple of four np arrays: first: embedding of words of first paragraphs per row
                                         second: embedding of words of second paragraphs per row
@@ -119,8 +136,11 @@ def make_dataset_with_indices(stoi, max_len=512 , min_len=10 , min_sent=3, parag
                                         indices: indices in which each sentence of paragraph ends
         """
 
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
     paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
@@ -160,9 +180,10 @@ def make_dataset_with_indices(stoi, max_len=512 , min_len=10 , min_sent=3, parag
     labels[:len(paragraphs), 0] = 1
     labels[len(paragraphs):, 1] = 1
 
-    indices1 = np.ones((2 * len(paragraphs), max_sent), dtype=np.int64) * (max_len + 1)
-    indices2 = np.ones((2 * len(paragraphs), max_sent), dtype=np.int64) * (max_len + 1)
-
+    indices1 = np.ones(
+        (2 * len(paragraphs), max_sent), dtype=np.int64) * (max_len + 1)
+    indices2 = np.ones(
+        (2 * len(paragraphs), max_sent), dtype=np.int64) * (max_len + 1)
 
     for i, p in enumerate(first_sents):
         l = -1
@@ -201,64 +222,82 @@ def make_dataset_with_indices(stoi, max_len=512 , min_len=10 , min_sent=3, parag
     second = second[permutation]
     labels = labels[permutation]
     indices1 = indices1[permutation]
-    indices2 = indices2 [permutation]
-
+    indices2 = indices2[permutation]
 
     return first, second, labels, indices1, indices2
 
 
-def write_paragraphs_in_file(file_path , splits , max_len=512 , min_len=10 , min_sent=3 , paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True ):
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+def write_paragraphs_in_file(file_path,
+                             splits,
+                             max_len=512,
+                             min_len=10,
+                             min_sent=3,
+                             paragraph_id=None,
+                             books=None,
+                             tags=None,
+                             num_sequential=2,
+                             Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
-    paragraphs = filter(paragraphs , max_len , min_len , min_sent)
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
-    prev=0
-    paragraphs_split=[]
+    prev = 0
+    paragraphs_split = []
 
     for i in splits:
-        print (i)
-        paragraphs_split.append(paragraphs[prev:min(len(paragraphs),int(prev+len(paragraphs)*i))])
-        prev = int(prev+len(paragraphs)*i)
+        print(i)
+        paragraphs_split.append(
+            paragraphs[prev:min(len(paragraphs), int(prev +
+                                                     len(paragraphs) * i))])
+        prev = int(prev + len(paragraphs) * i)
 
-    for i,split in enumerate(paragraphs_split):
-        with open(file_path+'-'+str(i)+'.txt', 'a') as outfile:
-             x = x.text(format="text")
-             y = y.text(format="text")
-             outfile.write(x+'\n')
-             outfile.write(y+'\n')
+    for i, split in enumerate(paragraphs_split):
+        with open(file_path + '-' + str(i) + '.txt', 'a') as outfile:
+            x = x.text(format="text")
+            y = y.text(format="text")
+            outfile.write(x + '\n')
+            outfile.write(y + '\n')
 
 
-
-
-def filter (paragraphs , max_len=512 , min_len=10 , min_sent=3):
+def filter(paragraphs, max_len=512, min_len=10, min_sent=3):
     ret = []
     for tuple in paragraphs:
-        flag=False
+        flag = False
         for seq in tuple:
             l = len(seq.text(format="words"))
             ls = len(seq.text(format="sentences"))
-            if (l>max_len or l<min_len or ls<min_sent):
+            if (l > max_len or l < min_len or ls < min_sent):
                 flag = True
 
-        if (flag==False):
+        if (flag == False):
             ret.append(tuple)
 
     return ret
 
 
+def get_paragraphs_as_sents(stoi,
+                            max_len=512,
+                            min_len=10,
+                            min_sent=3,
+                            paragraph_id=None,
+                            books=None,
+                            tags=None,
+                            num_sequential=2,
+                            Paragraph_Object=True):
 
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
-def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True):
+    paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
-
-    paragraphs=filter(paragraphs , max_len , min_len , min_sent)
-
-    print (len(paragraphs))
+    print(len(paragraphs))
 
     first_seq = []
     second_seq = []
@@ -271,17 +310,19 @@ def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragra
         second_seq.append(y.text(format="sentences", lowercase=True))
 
     for paragraph in first_seq:
-        max_p_len = max(max_p_len , len(paragraph))
+        max_p_len = max(max_p_len, len(paragraph))
         for sent in paragraph:
-            max_sent_len = max(max_sent_len , len(sent))
+            max_sent_len = max(max_sent_len, len(sent))
 
     for paragraph in second_seq:
-        max_p_len = max(max_p_len , len(paragraph))
+        max_p_len = max(max_p_len, len(paragraph))
         for sent in paragraph:
-            max_sent_len = max(max_sent_len , len(sent))
+            max_sent_len = max(max_sent_len, len(sent))
 
-    first = np.zeros((2 * len(paragraphs), max_p_len,max_sent_len), dtype=np.int32)
-    second = np.zeros((2 * len(paragraphs), max_p_len,max_sent_len), dtype=np.int32)
+    first = np.zeros((2 * len(paragraphs), max_p_len, max_sent_len),
+                     dtype=np.int32)
+    second = np.zeros((2 * len(paragraphs), max_p_len, max_sent_len),
+                      dtype=np.int32)
 
     labels = np.zeros((2 * len(paragraphs), 2), dtype=np.float32)
     labels[:len(paragraphs), 0] = 1
@@ -289,7 +330,7 @@ def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragra
 
     for i, p in enumerate(first_seq):
         for j, sent in enumerate(p):
-            for k,word in enumerate(sent):
+            for k, word in enumerate(sent):
                 if word in stoi:
                     first[i, j, k] = stoi[word]
                 else:
@@ -297,7 +338,7 @@ def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragra
 
     for i, p in enumerate(second_seq):
         for j, sent in enumerate(p):
-            for k,word in enumerate(sent):
+            for k, word in enumerate(sent):
                 if word in stoi:
                     second[i, j, k] = stoi[word]
                 else:
@@ -314,10 +355,20 @@ def get_paragraphs_as_sents(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragra
 
     return first, second, labels
 
-def get_sents_as_text_list(max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True):
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+def get_sents_as_text_list(max_len=512,
+                           min_len=10,
+                           min_sent=3,
+                           paragraph_id=None,
+                           books=None,
+                           tags=None,
+                           num_sequential=2,
+                           Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
     paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
@@ -325,7 +376,7 @@ def get_sents_as_text_list(max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=N
 
     for x, y in paragraphs:
         xs = x.text("sentences")
-        ys = y.text ("sentences")
+        ys = y.text("sentences")
         xst = [" ".join(sent) for sent in xs]
         yst = [" ".join(sent) for sent in ys]
         ret.append((xst, yst))
@@ -335,22 +386,32 @@ def get_sents_as_text_list(max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=N
     return ret
 
 
-def get_paragraphs_list(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True):
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+def get_paragraphs_list(stoi,
+                        max_len=512,
+                        min_len=10,
+                        min_sent=3,
+                        paragraph_id=None,
+                        books=None,
+                        tags=None,
+                        num_sequential=2,
+                        Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
     paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
-    ret=[]
+    ret = []
 
     for tuple in paragraphs:
-        tuple_indexed=[]
+        tuple_indexed = []
         for p in tuple:
-            p_indexed=[]
+            p_indexed = []
             sents = p.text(format="sentences")
             for sent in sents:
-                sent_indexed=[]
+                sent_indexed = []
                 for word in sent:
                     if word in stoi:
                         sent_indexed.append(stoi[word])
@@ -365,34 +426,29 @@ def get_paragraphs_list(stoi, max_len=512 , min_len=10 , min_sent=3 ,paragraph_i
 
     print(ret[0])
 
-
     return ret
 
-def get_paragraphs_as_text(max_len=512 , min_len=10 , min_sent=3 , paragraph_id=None, books=None, tags=None,
-                            num_sequential=2, Paragraph_Object=True):
-    paragraphs = get_paragraphs(paragraph_id=paragraph_id, books=books,
-                                tags=tags, num_sequential=num_sequential, paragraph_object=Paragraph_Object)
+
+def get_paragraphs_as_text(max_len=512,
+                           min_len=10,
+                           min_sent=3,
+                           paragraph_id=None,
+                           books=None,
+                           tags=None,
+                           num_sequential=2,
+                           Paragraph_Object=True):
+    paragraphs = get_paragraphs(paragraph_id=paragraph_id,
+                                books=books,
+                                tags=tags,
+                                num_sequential=num_sequential,
+                                paragraph_object=Paragraph_Object)
 
     paragraphs = filter(paragraphs, max_len, min_len, min_sent)
 
     ret = []
 
-    for x,y in paragraphs:
-        ret.append((x.text("text") , y.text("text")))
-
+    for x, y in paragraphs:
+        ret.append((x.text("text"), y.text("text")))
 
     shuffle(ret)
     return ret
-
-
-
-
-
-
-
-
-
-
-
-
-

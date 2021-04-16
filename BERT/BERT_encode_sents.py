@@ -7,6 +7,7 @@ import time
 
 encoder = None
 
+
 class BERT_encoder:
     """
     a class for encoding paragraphs
@@ -28,9 +29,12 @@ class BERT_encoder:
 
         self._inputs = tf.placeholder(shape=[None, None], dtype=tf.int32)
         self._mask = tf.placeholder(shape=[None, None], dtype=tf.int32)
-        self._model = modeling.BertModel(config=config, is_training=False, input_ids=self._inputs,
+        self._model = modeling.BertModel(config=config,
+                                         is_training=False,
+                                         input_ids=self._inputs,
                                          input_mask=self._mask,
-                                         use_one_hot_embeddings=False, scope="bert")
+                                         use_one_hot_embeddings=False,
+                                         scope="bert")
 
         self._embeddings = self._model.get_all_encoder_layers()
 
@@ -66,14 +70,18 @@ class BERT_encoder:
                 ins[i][j] = ids[j]
                 mask[i][j] = 1
 
-        embds = self._sess.run(self._embeddings, {self._inputs: ins, self._mask: mask})
+        embds = self._sess.run(self._embeddings, {
+            self._inputs: ins,
+            self._mask: mask
+        })
 
         final_embd = embds[-1]
 
         return np.mean(final_embd, axis=1)
 
 
-def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size):
+def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path,
+                 batch_size):
     """
         ::param:: paragraphs containing tuples of the first and the second paragraph each one as a list of sentences
 
@@ -100,10 +108,10 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
 
     start = time.time()
 
-    for i in range(0, offset+1, batch_size):
-        print (i)
-        if (i<len(paragraphs)):
-            paragraph_batch = paragraphs[i:min(i + batch_size , len(paragraphs))]
+    for i in range(0, offset + 1, batch_size):
+        print(i)
+        if (i < len(paragraphs)):
+            paragraph_batch = paragraphs[i:min(i + batch_size, len(paragraphs))]
 
             sent_batch = []
             for x, y in paragraph_batch:

@@ -5,6 +5,7 @@ from tensorflow.keras.activations import softmax
 import numpy as np
 from determiner import Determiner
 
+
 class AttentionBasedDeterminer1(Model):
 
     def __init__(self, name, par_len, dim, output_size=1, dropout=0.2):
@@ -23,8 +24,8 @@ class AttentionBasedDeterminer1(Model):
         self.dim = dim
         self.par_len = par_len
         self.dropout = layers.Dropout(dropout, name=name + '/Dropout')
-        self.dense1 = layers.Dense(64, activation = 'relu', name = name + '/Dense1')
-        self.dense2 = layers.Dense(1, name = name + '/Dense2')
+        self.dense1 = layers.Dense(64, activation='relu', name=name + '/Dense1')
+        self.dense2 = layers.Dense(1, name=name + '/Dense2')
         self.FC = Determiner(name=name + "/FC")
 
     @property
@@ -33,7 +34,9 @@ class AttentionBasedDeterminer1(Model):
 
     @property
     def trainable_variables(self):
-        return [var for var in self._variables if self._trainable_variables[var]]
+        return [
+            var for var in self._variables if self._trainable_variables[var]
+        ]
 
     def reshape(self, a, i, rep):
         a = expand_dims(a, axis=i)
@@ -43,14 +46,17 @@ class AttentionBasedDeterminer1(Model):
         h = inputs[0]
         q = inputs[1]
         dim = 2 * self.dim
-        x = layers.concatenate([self.reshape(h, 2, self.par_len), self.reshape(q, 2, self.par_len)])
+        x = layers.concatenate([
+            self.reshape(h, 2, self.par_len),
+            self.reshape(q, 2, self.par_len)
+        ])
         x = tf.reshape(x, shape=(x.shape[0], self.par_len * self.par_len, dim))
         a = self.dense1(x)
         if is_training:
             a = self.dropout(a)
         a = self.dense2(a)
         if is_training:
-            a = self.dropout(a) 
+            a = self.dropout(a)
         a = tf.reshape(a, shape=(a.shape[0], self.par_len * self.par_len))
         a = softmax(a, axis=1)
         a = self.reshape(a, 2, dim)

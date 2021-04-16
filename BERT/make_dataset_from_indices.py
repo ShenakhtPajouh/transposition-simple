@@ -28,9 +28,12 @@ class BERT_encoder:
 
         self._inputs = tf.placeholder(shape=[None, None], dtype=tf.int32)
         self._mask = tf.placeholder(shape=[None, None], dtype=tf.int32)
-        self._model = modeling.BertModel(config=config, is_training=False, input_ids=self._inputs,
+        self._model = modeling.BertModel(config=config,
+                                         is_training=False,
+                                         input_ids=self._inputs,
                                          input_mask=self._mask,
-                                         use_one_hot_embeddings=False , scope="bert")
+                                         use_one_hot_embeddings=False,
+                                         scope="bert")
 
         self._embeddings = self._model.get_all_encoder_layers()
 
@@ -48,8 +51,8 @@ class BERT_encoder:
         """
 
         tokenized_ids = []
-        for x , y in batch:
-            ids = [101]+x+[102]+y
+        for x, y in batch:
+            ids = [101] + x + [102] + y
 
             tokenized_ids.append(ids)
 
@@ -65,16 +68,19 @@ class BERT_encoder:
                 ins[i][j] = ids[j]
                 mask[i][j] = 1
 
-        embds = self._sess.run(self._embeddings, {self._inputs: ins, self._mask: mask})
+        embds = self._sess.run(self._embeddings, {
+            self._inputs: ins,
+            self._mask: mask
+        })
 
-        final_embd = embds[-1][:,0,:]+ embds[-2][:,0,:] + embds[-3][:,0,:] + embds[-4][:,0,:]
-
-
+        final_embd = embds[-1][:, 0, :] + embds[-2][:, 0, :] + embds[
+            -3][:, 0, :] + embds[-4][:, 0, :]
 
         return final_embd
 
 
-def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, batch_size, max_len):
+def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path,
+                 batch_size, max_len):
     """
         a makes two np arrays data and labels
         data: [,768] np array containing [cls] token encoding used for classification
@@ -91,7 +97,9 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
     start = time.time()
     mem = 0
     for x, y in paragraphs:
-        batch.append((x[max(0, len(x) - max_len // 2):] , y[0:min(len(y), max_len // 2)]))
+        batch.append(
+            (x[max(0,
+                   len(x) - max_len // 2):], y[0:min(len(y), max_len // 2)]))
         count += 1
         if (count % batch_size == 0):
             print(count)
@@ -107,7 +115,9 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
     count = mem
     batch = []
     for x, y in paragraphs:
-        batch.append((y[max(0, len(y) - max_len // 2):], x[0:min(len(x), max_len // 2)]))
+        batch.append(
+            (y[max(0,
+                   len(y) - max_len // 2):], x[0:min(len(x), max_len // 2)]))
         count += 1
         if (count % batch_size == 0):
             print(count)
@@ -128,8 +138,4 @@ def make_dataset(paragraphs, bert_config_path, bert_vocab_path, bert_base_path, 
     data = data[permutation]
     labels = labels[permutation]
 
-
-    return data,labels
-
-
-
+    return data, labels

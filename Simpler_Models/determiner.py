@@ -19,8 +19,12 @@ class Determiner(tf.keras.Model):
         self.output_size = output_size
         self.hidden_dim = hidden_dim
         self.dropout = tf.keras.layers.Dropout(dropout, name=name + '/Dropout')
-        self.layer1 = tf.keras.layers.Dense(self.hidden_dim, activation='relu', name=name + '/Dense1')
-        self.layer2 = tf.keras.layers.Dense(self.output_size, activation='softmax', name=name + '/Dense2')
+        self.layer1 = tf.keras.layers.Dense(self.hidden_dim,
+                                            activation='relu',
+                                            name=name + '/Dense1')
+        self.layer2 = tf.keras.layers.Dense(self.output_size,
+                                            activation='softmax',
+                                            name=name + '/Dense2')
 
     @property
     def variables(self):
@@ -28,7 +32,9 @@ class Determiner(tf.keras.Model):
 
     @property
     def trainable_variables(self):
-        return [var for var in self._variables if self._trainable_variables[var]]
+        return [
+            var for var in self._variables if self._trainable_variables[var]
+        ]
 
     def call(self, inputs, is_training=True):
         y = self.layer1(inputs)

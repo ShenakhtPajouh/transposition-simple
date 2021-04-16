@@ -23,5 +23,3 @@ class main_model(Model):
 
     def call(self, inputs):
         raise NotImplementedError
-
-

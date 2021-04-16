@@ -12,7 +12,8 @@ def train(embedding_table, batch_size, epochs, learning_rate, hidden_len, data,
     tf.keras.backend.set_session(session)
 
     with tf.device('/gpu:0'):
-        model = main_model3.main_model('lstm-glucnn', embedding_table, hidden_len)
+        model = main_model3.main_model('lstm-glucnn', embedding_table,
+                                       hidden_len)
 
     adam = tf.keras.optimizers.Adam(lr=learning_rate)
 
@@ -24,16 +25,25 @@ def train(embedding_table, batch_size, epochs, learning_rate, hidden_len, data,
                                                      save_weights_only=True,
                                                      verbose=1)
 
-    history = model.fit(x = [data[0],data[1],data[3],data[4]] , y = data[2] , batch_size = batch_size, validation_split = validation_split ,epochs=epochs, callbacks=[cp_callback])
+    history = model.fit(x=[data[0], data[1], data[3], data[4]],
+                        y=data[2],
+                        batch_size=batch_size,
+                        validation_split=validation_split,
+                        epochs=epochs,
+                        callbacks=[cp_callback])
 
     return history
 
 
 def plot(name, history):
     plt.figure(figsize=(16, 10))
-    val = plt.plot(history.epoch, history.history['val_categorical_crossentropy'],
-                   '--', label=name + ' Val')
-    plt.plot(history.epoch, history.history['categorical_crossentropy'], color=val[0].get_color(),
+    val = plt.plot(history.epoch,
+                   history.history['val_categorical_crossentropy'],
+                   '--',
+                   label=name + ' Val')
+    plt.plot(history.epoch,
+             history.history['categorical_crossentropy'],
+             color=val[0].get_color(),
              label=name + ' Train')
     plt.xlabel('Epochs')
     plt.ylabel('categorical_crossentropy'.replace('_', ' ').title())
@@ -50,8 +60,10 @@ if __name__ == '__main__':
     labels = utils.get_from_file('labels.pkl')
     indices = utils.get_from_file('indices.pkl')
 
-    train_data = (first[:(first.shape[0] // 10) * 9, :], second[:(second.shape[0] // 10) * 9, :],
-                  labels[:(labels.shape[0] // 10) * 9, :] , indices[0][:(labels.shape[0] // 10) * 9, :],
+    train_data = (first[:(first.shape[0] // 10) * 9, :],
+                  second[:(second.shape[0] // 10) * 9, :],
+                  labels[:(labels.shape[0] // 10) * 9, :],
+                  indices[0][:(labels.shape[0] // 10) * 9, :],
                   indices[1][:(labels.shape[0] // 10) * 9, :])
 
     test_data = (first[(first.shape[0] // 10) * 9:, :],
@@ -60,10 +72,13 @@ if __name__ == '__main__':
                  indices[0][:(labels.shape[0] // 10) * 9, :],
                  indices[1][:(labels.shape[0] // 10) * 9, :])
 
-    history = train(embedding_table=vectors, batch_size=64, epochs=50, learning_rate=0.05, hidden_len=200,
-                    validation_split=0.05, data=train_data,
+    history = train(embedding_table=vectors,
+                    batch_size=64,
+                    epochs=50,
+                    learning_rate=0.05,
+                    hidden_len=200,
+                    validation_split=0.05,
+                    data=train_data,
                     save_path='./model2.ckpt')
 
     plot('LSTM+GLUCNN', history)
-
-

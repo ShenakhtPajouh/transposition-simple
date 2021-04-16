@@ -1,8 +1,10 @@
 import tensorflow as tf
 from tensorflow.keras.layers import *
 
+
 class sent_encoder(tf.keras.Model):
-    def __init__(self, name, embedding_table , hidden_len, dropout_rate=0.2):
+
+    def __init__(self, name, embedding_table, hidden_len, dropout_rate=0.2):
         super(sent_encoder, self).__init__()
 
         self._name = name
@@ -11,22 +13,28 @@ class sent_encoder(tf.keras.Model):
         self._hidden_len = hidden_len
         self._dropout_rate = dropout_rate
 
-
         embedding_initializer = tf.keras.initializers.constant(embedding_table)
-        self._embeddings = tf.keras.layers.Embedding(self._vocab_size , self._embedding_len , embeddings_initializer= embedding_initializer ,
-                                     trainable=False , mask_zero=True , name=self._name+'/embedding')
-        self._LSTM = tf.keras.layers.LSTM(self._hidden_len , name=self._name+'/LSTM' , return_sequences=True ,
+        self._embeddings = tf.keras.layers.Embedding(
+            self._vocab_size,
+            self._embedding_len,
+            embeddings_initializer=embedding_initializer,
+            trainable=False,
+            mask_zero=True,
+            name=self._name + '/embedding')
+        self._LSTM = tf.keras.layers.LSTM(self._hidden_len,
+                                          name=self._name + '/LSTM',
+                                          return_sequences=True,
                                           dropout=self._dropout_rate)
-
 
     @property
     def variables(self):
         return self._LSTM.variables
 
-
-    def call(self , seq , ):
+    def call(
+        self,
+        seq,
+    ):
         x = self._embeddings(seq)
         outputs = self._LSTM(x)
 
         return outputs
-

@@ -6,10 +6,12 @@ import numpy as np
 import time
 import string
 
+
 def exist(words, word, i):
     if len(words) <= i:
         return False
     return words[i] == word
+
 
 if __name__ == '__main__':
 
@@ -18,18 +20,18 @@ if __name__ == '__main__':
 
     with open('paragraph_pairs_keys.pkl', 'rb') as pkl:
         paragraphs_keys = pickle.load(pkl)
-        
+
     print('Here!')
 
     parser = spacy.load('en')
     tokenizer = English().Defaults.create_tokenizer(parser)
     bc = BertClient()
     printset = set(string.printable)
-    
+
     slices = 10
     length = int(len(paragraphs_texts) / slices)
-    
-    for sli in range(slices-4):
+
+    for sli in range(slices - 4):
         sl = sli + 4
         start = time.time()
         embedded_keys = []
@@ -37,12 +39,13 @@ if __name__ == '__main__':
         if sl == slices - 1:
             end = len(paragraphs_texts)
         else:
-            end = (sl+1) * length
-        
+            end = (sl + 1) * length
+
         keys_path = 'keys_encoded' + str(sl) + '.pkl'
         mask_path = 'mask_encoded' + str(sl) + '.pkl'
 
-        for ind, (pair_text, keys) in enumerate(zip(paragraphs_texts[begin:end], paragraphs_keys[begin:end])):
+        for ind, (pair_text, keys) in enumerate(
+                zip(paragraphs_texts[begin:end], paragraphs_keys[begin:end])):
             if ind % 100 == 0:
                 print(begin + ind)
 
@@ -77,10 +80,10 @@ if __name__ == '__main__':
                 for i in indices:
                     if exist(tokens1, word, i):
                         cnt += 1
-                        e += vecs1[0][i+1]
+                        e += vecs1[0][i + 1]
                     if exist(tokens2, word, i):
                         cnt += 1
-                        e += vecs2[0][i+1]
+                        e += vecs2[0][i + 1]
 
                 if cnt > 0:
                     embedded_keys[-1].append(e / cnt)
@@ -93,7 +96,7 @@ if __name__ == '__main__':
             for j, key in enumerate(paragraphs):
                 keys[i][j] = key
                 mask[i][j] = 1
-        
+
         with open(keys_path, 'wb') as pkl:
             pickle.dump(keys, pkl)
 
@@ -101,5 +104,3 @@ if __name__ == '__main__':
             pickle.dump(mask, pkl)
 
         print('time = ' + str(time.time() - start))
-    
-        

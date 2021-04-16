@@ -3,7 +3,8 @@ from random import shuffle
 import pickle
 
 
-def batch_generator(file_names, batch_size, max_sent_num , embedding_len , epochs):
+def batch_generator(file_names, batch_size, max_sent_num, embedding_len,
+                    epochs):
     """
     yields a batch containing:
             first_num_sents: number of words in each first paragraph
@@ -22,12 +23,11 @@ def batch_generator(file_names, batch_size, max_sent_num , embedding_len , epoch
     :param epochs
     """
 
-
-    for epoch in range (epochs):
-        print ("***EPOCH: "+str(epoch)+"***")
+    for epoch in range(epochs):
+        print("***EPOCH: " + str(epoch) + "***")
         shuffle(file_names)
         for name in file_names:
-            with open (name , 'rb') as pkl:
+            with open(name, 'rb') as pkl:
                 data = pickle.load(pkl)
 
             #adding reversed order of paragraphs to the data
@@ -36,20 +36,22 @@ def batch_generator(file_names, batch_size, max_sent_num , embedding_len , epoch
             half_first_len = data[2]
             half_second_len = data[3]
 
-            first = np.zeros((half_first.shape[0]*2 , max_sent_num , embedding_len))
-            second = np.zeros((half_first.shape[0] * 2, max_sent_num , embedding_len))
-            first_len = np.zeros((half_first.shape[0]*2) , np.int32)
-            second_len = np.zeros((half_first.shape[0]*2) , np.int32)
-            labels = np.zeros((half_first.shape[0]*2 , 2))
+            first = np.zeros(
+                (half_first.shape[0] * 2, max_sent_num, embedding_len))
+            second = np.zeros(
+                (half_first.shape[0] * 2, max_sent_num, embedding_len))
+            first_len = np.zeros((half_first.shape[0] * 2), np.int32)
+            second_len = np.zeros((half_first.shape[0] * 2), np.int32)
+            labels = np.zeros((half_first.shape[0] * 2, 2))
 
-            labels[:half_first.shape[0] , 0] = 1
+            labels[:half_first.shape[0], 0] = 1
             labels[half_first.shape[0]:, 1] = 1
 
-            first[:half_first.shape[0] , :half_first.shape[1]] = half_first
-            first[half_first.shape[0]: , :half_first.shape[1]] = half_second
+            first[:half_first.shape[0], :half_first.shape[1]] = half_first
+            first[half_first.shape[0]:, :half_first.shape[1]] = half_second
 
-            second[:half_first.shape[0] , :half_first.shape[1]] = half_second
-            second[half_first.shape[0]: , :half_first.shape[1]] = half_first
+            second[:half_first.shape[0], :half_first.shape[1]] = half_second
+            second[half_first.shape[0]:, :half_first.shape[1]] = half_first
 
             first_len[:half_first.shape[0]] = half_first_len
             first_len[half_first.shape[0]:] = half_second_len
@@ -66,19 +68,22 @@ def batch_generator(file_names, batch_size, max_sent_num , embedding_len , epoch
             labels = labels[permutation]
 
             #making batch
-            for i in range(0, first.shape[0]-first.shape[0]%batch_size , batch_size):
+            for i in range(0, first.shape[0] - first.shape[0] % batch_size,
+                           batch_size):
                 first_len_batch = first_len[i:i + batch_size]
                 second_len_batch = second_len[i:i + batch_size]
                 labels_batch = labels[i:i + batch_size]
 
+                inputs = np.zeros(
+                    (batch_size, 2 * max_sent_num + 1, embedding_len),
+                    dtype=np.float32)
 
-                inputs = np.zeros((batch_size , 2*max_sent_num+1 , embedding_len) , dtype=np.float32)
-
-                for j in range (batch_size):
+                for j in range(batch_size):
                     #concatenating first and the second paragraph
-                    inputs[j][:first_len_batch[j]] = first[j][:first_len_batch[j]]
-                    inputs[j][first_len_batch[j]+1:first_len_batch[j]+1+second_len_batch[j]] = second[j][:second_len_batch[j]]
+                    inputs[j][:first_len_batch[j]] = first[
+                        j][:first_len_batch[j]]
+                    inputs[j][first_len_batch[j] + 1:first_len_batch[j] + 1 +
+                              second_len_batch[j]] = second[
+                                  j][:second_len_batch[j]]
 
-
-
-                yield first_len_batch, second_len_batch, inputs , labels_batch
+                yield first_len_batch, second_len_batch, inputs, labels_batch

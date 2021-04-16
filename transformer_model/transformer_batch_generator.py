@@ -2,7 +2,8 @@ import numpy as np
 from BERT.tokenization import FullTokenizer
 
 
-def batch_generator(paragraphs, batch_size, max_sent_len, bert_vocab_path , epochs):
+def batch_generator(paragraphs, batch_size, max_sent_len, bert_vocab_path,
+                    epochs):
     """
     yields a batch containing:
             first_num_sents: number of words in each first paragraph
@@ -19,7 +20,7 @@ def batch_generator(paragraphs, batch_size, max_sent_len, bert_vocab_path , epoc
     paragraphs = paragraphs[:(len(paragraphs) - (len(paragraphs) % batch_size))]
     tokenizer = FullTokenizer(bert_vocab_path)
 
-    for epoch in range (epochs):
+    for epoch in range(epochs):
         for i in range(0, len(paragraphs), batch_size):
             print(i)
             paragraph_batch = paragraphs[i:i + batch_size]
@@ -60,4 +61,5 @@ def batch_generator(paragraphs, batch_size, max_sent_len, bert_vocab_path , epoc
                     inputs[j, k] = word
                     sentence_mask[j, k] = 1
 
-            yield first_num_sents, second_num_sents, np.array(indices, dtype=np.int32), inputs, sentence_mask, labels
+            yield first_num_sents, second_num_sents, np.array(
+                indices, dtype=np.int32), inputs, sentence_mask, labels
